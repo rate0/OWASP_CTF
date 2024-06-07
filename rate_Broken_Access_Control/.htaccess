@@ -1,0 +1,2 @@
+RewriteEngine On
+RewriteRule ^index\.php$ index\.php?username=user1 [NC,L]
