@@ -1,0 +1,23 @@
+body {
+    background-color: #f4f4f4;
+    color: #333;
+}
+
+.container {
+    max-width: 600px;
+}
+
+.jumbotron {
+    background-color: #fff;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+.card {
+    margin-top: 20px;
+}
+
+.alert {
+    margin-top: 15px;
+}
