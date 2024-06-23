@@ -1,76 +1,65 @@
-from flask import Flask, render_template, request, send_from_directory, redirect, url_for, flash, abort
+from flask import Flask, request, render_template, redirect, url_for, flash
 import os
-import time
-import threading
-from werkzeug.utils import secure_filename
-from utils import process_update, cleanup_old_files
+import hashlib
+from apscheduler.schedulers.background import BackgroundScheduler
+from datetime import datetime, timedelta
 
 app = Flask(__name__)
-app.config['UPLOAD_FOLDER'] = 'uploads'
-app.config['SECRET_KEY'] = 'supersecretkey'
-app.config['ALLOWED_EXTENSIONS'] = {'zip', 'tar', 'gz'}
+app.secret_key = 'supersecretkey'
+FLAG = "IR{5of7w4r3_1n73gr1ty_f41lur3}"
+UPLOAD_FOLDER = 'uploads'
+DELETE_AFTER_SECONDS = 300  # Time in seconds after which the file will be deleted (e.g., 300 seconds = 5 minutes)
 
-# Путь к файлу с флагом
-FLAG_FILE = 'flags/flag.txt'
-ADMIN_SECRET_KEY = 'admin_secret_key'
+scheduler = BackgroundScheduler()
+scheduler.start()
 
-# Функция для проверки разрешенных расширений файлов
-def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
+def save_file(file):
+    file_path = os.path.join(UPLOAD_FOLDER, file.filename)
+    file.save(file_path)
+    schedule_file_deletion(file_path)
+    return file_path
+
+def schedule_file_deletion(file_path):
+    delete_time = datetime.now() + timedelta(seconds=DELETE_AFTER_SECONDS)
+    scheduler.add_job(delete_file, 'date', run_date=delete_time, args=[file_path])
+
+def delete_file(file_path):
+    if os.path.exists(file_path):
+        os.remove(file_path)
+        print(f"File {file_path} deleted.")
+
+def is_file_integrity_compromised(file_path):
+    expected_hash = "5d41402abc4b2a76b9719d911017c592"  # MD5 hash of "hello"
+    with open(file_path, "rb") as f:
+        file_hash = hashlib.md5(f.read()).hexdigest()
+    return file_hash != expected_hash
 
 @app.route('/')
 def index():
     return render_template('index.html')
 
-@app.route('/admin')
-def admin():
-    # Скрытый комментарий для намека на уязвимость
-    hidden_comment = "<!-- HINT: Pay attention to how filenames are processed. -->"
-    return render_template('admin.html', hidden_comment=hidden_comment)
-
-@app.route('/upload', methods=['POST'])
-def upload_file():
-    if 'file' not in request.files:
-        flash('No file part')
-        return redirect(request.url)
-    file = request.files['file']
-    if file.filename == '':
-        flash('No selected file')
-        return redirect(request.url)
-    if file and allowed_file(file.filename):
-        # ВНИМАНИЕ: Уязвимость - небезопасная обработка имени файла
-        filename = secure_filename(file.filename)
-        file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-        file.save(file_path)
-        process_update(filename)  # Обработка обновления, которая будет уязвима
-        return redirect(url_for('index'))
-    else:
-        flash('Invalid file type')
-        return redirect(request.url)
-
-@app.route('/download/<path:filename>', methods=['GET'])
-def download(filename):
-    try:
-        return send_from_directory(app.config['UPLOAD_FOLDER'], filename, as_attachment=True)
-    except FileNotFoundError:
-        abort(404, 'File not found.')
-
-@app.route('/flag')
-def flag():
-    # Флаг доступен только для пользователей, которые нашли уязвимость
-    secret_key = request.args.get('key')
-    if secret_key == ADMIN_SECRET_KEY:
-        with open(FLAG_FILE, 'r') as f:
-            flag = f.read()
-        return flag
-    else:
-        return 'Access denied.'
+@app.route('/upload', methods=['GET', 'POST'])
+def upload():
+    if request.method == 'POST':
+        if 'file' not in request.files:
+            flash('No file part')
+            return redirect(request.url)
+        file = request.files['file']
+        if file.filename == '':
+            flash('No selected file')
+            return redirect(request.url)
+        if file:
+            file_path = save_file(file)
+            if is_file_integrity_compromised(file_path):
+                os.remove(file_path)
+                flash('File integrity check failed!')
+                return redirect(request.url)
+            else:
+                flash(f"File uploaded successfully! Here is your flag: {FLAG}")
+                return redirect(request.url)
+    return render_template('upload.html')
 
 if __name__ == '__main__':
-    if not os.path.exists(app.config['UPLOAD_FOLDER']):
-        os.makedirs(app.config['UPLOAD_FOLDER'])
-    # Запуск фоновой задачи для очистки старых файлов
-    cleanup_thread = threading.Thread(target=cleanup_old_files, args=(app.config['UPLOAD_FOLDER'],))
-    cleanup_thread.daemon = True
-    cleanup_thread.start()
-    app.run(host='0.0.0.0', port=5000)
+    if not os.path.exists(UPLOAD_FOLDER):
+        os.makedirs(UPLOAD_FOLDER)
+    app.run(host='0.0.0.0', port=9000)

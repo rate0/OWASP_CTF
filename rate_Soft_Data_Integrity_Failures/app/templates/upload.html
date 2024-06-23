@@ -1,0 +1,30 @@
+<!-- templates/upload.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload File</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Upload File</h1>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        <!-- Форма загрузки файла -->
+        <form method="post" enctype="multipart/form-data">
+            <input type="file" name="file" accept=".txt">
+            <button type="submit" class="btn">Upload</button>
+        </form>
+
+        <p style="display:none">Никому не говори, но хэш же нельзя дешифровать? 5d41402abc4b2a76b9719d911017c592</p>
+    </div>
+</body>
+</html>

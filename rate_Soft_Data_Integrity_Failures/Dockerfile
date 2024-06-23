@@ -1,16 +1,21 @@
-# Базовый образ Python 3.8 slim
-FROM python:3.8-slim
+# Используем официальный образ Python
+FROM python:3.9-slim
 
-# Установка рабочей директории в /app
+# Устанавливаем переменную среды для Python
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
+
+# Устанавливаем рабочую директорию контейнера
 WORKDIR /app
 
-# Копирование зависимостей и исходного кода приложения
-COPY ./app /app/app
-COPY ./static /app/static
-COPY ./uploads /app/uploads
+# Копируем зависимости Python
+COPY requirements.txt .
 
-# Установка Flask
-RUN pip install flask
+# Устанавливаем зависимости
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Команда для запуска приложения
-CMD ["python", "/app/app/app.py"]
+# Копируем код приложения в рабочую директорию
+COPY ./app /app
+
+# Запускаем приложение при старте контейнера
+CMD ["python", "app.py"]
