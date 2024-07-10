@@ -15,7 +15,7 @@ ENV FLASK_APP=app.py
 ENV FLASK_RUN_HOST=0.0.0.0
 
 # Откройте порт 5000 для доступа к серверу
-EXPOSE 5000
+EXPOSE 1000
 
 # Запустите приложение Flask
 CMD ["flask", "run"]

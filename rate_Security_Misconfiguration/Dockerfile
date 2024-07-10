@@ -16,5 +16,5 @@ COPY apache-config.conf /etc/apache2/sites-available/000-default.conf
 # Изменяем права доступа к файлу с флагом
 RUN chmod 644 /flag
 
-# Указываем Apache запускать фронт контейнера на порту 80
-EXPOSE 80
+# Указываем Apache запускать фронт контейнера на порту 4000
+EXPOSE 4000

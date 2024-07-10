@@ -11,7 +11,7 @@ app.use("/",proxy)
 
 
 //variables
-const port =2000
+const port =9000
 //index route
 app.get("/",(req,res)=>{
     res.sendFile(path.join(__dirname+"/index.html"))

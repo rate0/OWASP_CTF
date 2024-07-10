@@ -22,7 +22,7 @@ RUN apt-get update && apt-get install -y python3 && \
     rm -rf /var/lib/apt/lists/*
 
 # Expose ports
-EXPOSE 2000 1729
+EXPOSE 9000 1729
 
 # Command to run the SSRF vulnerable application
 CMD ["./run.sh"]

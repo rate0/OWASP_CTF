@@ -68,4 +68,4 @@ def secret_logs():
     return render_template('secret_logs.html', secret_logs_content=secret_logs_content)
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=1000)
+    app.run(host='0.0.0.0', port=7000)
